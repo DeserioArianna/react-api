@@ -9,8 +9,6 @@ function App() {
     image: ""
   });
 
-  const generateId = () => Date.now();
-
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     if (type === "checkbox" && name === "tags") {
@@ -32,31 +30,35 @@ function App() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (Object.values(formData).every(value => value !== "" && value !== null)) {
+    if (Object.values(formData).every(value => value !== "")) {
       const newPost = {
-        id: generateId(),
         ...formData,
       };
-      setPosts([...posts, newPost]);
-      setFormData({
-        title: "",
-        content: "",
-        image: "",
+
+      axios.post('http://localhost:3000/posts', newPost).then(resp => {
+        setPosts([...posts, newPost]);
+        setFormData({
+          title: "",
+          content: "",
+          image: "",
+        });
       });
     };
   };
 
   const handleDelete = (id) => {
-    axios.delete()
-    const newPosts = posts.filter((curPost) => curPost.id !== id);
-    setPosts(newPosts);
+    axios.delete(`http://localhost:3000/posts/${id}`).then(() => {
+      const newPosts = posts.filter((curPost) => curPost.id !== id);
+      setPosts(newPosts);
+    })
   };
 
   useEffect(() => {
     axios.get('http://localhost:3000/posts').then(resp => {
       console.log(resp.data)
+      setPosts(resp.data.posts);
     });
-});
+  }, []);
 
   return (
     <>
@@ -64,6 +66,7 @@ function App() {
         <h1>I miei fantastici Post</h1>
       </header>
       <div className="container">
+
         <form onSubmit={handleSubmit}>
           <div className='mb-3'>
             <label htmlFor="title" className='me-4'>Titolo:</label>
@@ -100,25 +103,20 @@ function App() {
         <div className="row mt-5">
           <div className="col d-flex justify-content-between flex-wrap row-gap-4">
 
-            {posts.length > 0 ?
-              posts.filter((curPost) => curPost.id).map((curPost) => (
-                <div className='card' key={curPost.id}>
-                  <div className='card-body'>
-                    <h4 className='card-title'>{curPost.title}</h4>
-                    <p className='card-text'>{curPost.content}</p>
-                    {curPost.postImage && <img src={curPost.image} alt={curPost.postName} />}
-                    <p><strong>Contenuto:</strong> {curPost.postContent}</p>
-                    <p><strong>Categoria:</strong> {curPost.postCategory}</p>
-                    <p><strong>Pubblicato:</strong></p>
-                    <p><strong>Tags:</strong> {curPost.tags.join(", ")}</p>
+            {posts.length > 0 ? (
+              posts.map((curPost) => (
+                <div className="card" key={curPost.id}>
+                  <div className="card-body">
+                    <h4 className="card-title">{curPost.title}</h4>
+                    <p className="card-text">{curPost.content}</p>
+                    {curPost.image && <img src={`http://localhost:3000/${curPost.image}`} alt={curPost.title} />}
                     <button onClick={() => handleDelete(curPost.id)}>🗑️</button>
                   </div>
                 </div>
-
-              )) : (
-                <p className='fs-3'>Non ci sono post</p>
-              )
-            }
+              ))
+            ) : (
+              <p className="fs-3">Non ci sono post</p>
+            )}
 
           </div>
         </div>
